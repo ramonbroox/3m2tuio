@@ -25,6 +25,7 @@
 #ifndef WIN32
 #include <pthread.h>
 #include <sys/time.h>
+#include <unistd.h>
 #else
 #include <windows.h>
 #endif

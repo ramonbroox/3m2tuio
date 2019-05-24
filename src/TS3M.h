@@ -10,7 +10,8 @@
 #define TS3M_X_RESOL 0x7FFF
 #define TS3M_Y_RESOL 0x7FFF
 
-#define TS3M_TOUCH_REPORT 0x13
+#define TS3M_TOUCH_REPORT_13 0x13
+#define TS3M_TOUCH_REPORT_17 0x17
 
 #define TS3M_TOUCHING       0x07
 #define TS3M_NOT_TOUCHING   0x04
@@ -30,18 +31,21 @@ struct _3M_touch_report {
     uint8_t x_msb;
     uint8_t y_lsb;
     uint8_t y_msb;
-    uint8_t width_lsb;
-    uint8_t width_msb;
-    uint8_t height_lsb;
-    uint8_t height_msb;
 };
 
-struct _3M_coordinate_report {
+struct _3M_coordinate_report_x13 {
     uint8_t report_id;
     struct _3M_touch_report touchs[6];
     uint8_t actual_count;
     uint8_t not_used1;
     uint8_t not_used2;
+};
+
+struct _3M_coordinate_report_x17 {
+    uint8_t report_id;
+    struct _3M_touch_report touchs[10];
+    uint8_t actual_count;
+    uint16_t scan_time;
 };
 
 #endif

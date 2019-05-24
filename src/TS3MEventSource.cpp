@@ -143,10 +143,20 @@ void TS3MEventSource::_read_loop() {
 				tv.tv_sec--;
 			}
 			double date = (double)tv.tv_sec + ((double)tv.tv_usec)/1000000.;
+            uint8_t report_type = data[0];
 
-			if (data[0] == TS3M_TOUCH_REPORT) { //this is a touch info report
+			if (report_type == TS3M_TOUCH_REPORT_13 || report_type == TS3M_TOUCH_REPORT_17) { //this is a touch info report
 
-			    struct _3M_coordinate_report * report = ( struct _3M_coordinate_report *)data;
+			    struct _3M_coordinate_report_x13 * report = ( struct _3M_coordinate_report_x13 *)data;
+			    struct _3M_coordinate_report_x17 * report17 = ( struct _3M_coordinate_report_x17 *)data;
+                int maxtouches = 6;
+                struct _3M_touch_report *touches = report->touchs;
+                if (report_type == TS3M_TOUCH_REPORT_17) {
+                    maxtouches = 10;
+                    touches = report17->touchs;
+                } 
+
+
 			    if (activeTouch == 0)
                     activeTouch = report->actual_count;
 
@@ -157,8 +167,8 @@ void TS3MEventSource::_read_loop() {
                         cout << "frame pending..." << endl;
                 }
 
-			    for (int i = 0; i < 6; i++) { //update for each touch tranfered infos
-			        _3M_touch_report * currentTouch = &(report->touchs[i]);
+			    for (int i = 0; i < maxtouches; i++) { //update for each touch tranfered infos
+			        _3M_touch_report * currentTouch = &(touches[i]);
 			        if (currentTouch->status != TS3M_INVALID_TOUCH) { //if it's a valid touch
                         transferredTouch++;
 			            //compute coordonates
