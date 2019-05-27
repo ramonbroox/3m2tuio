@@ -12,7 +12,7 @@
 #define _UTILITIES_H_
 
 #ifdef WIN32
-    #include <windows.h>
+#include <windows.h>
 #endif
 
 int isBigEndian();

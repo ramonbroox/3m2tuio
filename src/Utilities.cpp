@@ -2,14 +2,15 @@
 
 int isBigEndian()
 {
-	unsigned char EndianTest[2] = {1,0};
-	short x = *(short *)EndianTest;
+    unsigned char EndianTest[2] = {1,0};
+    short x = *(short *)EndianTest;
 
-	return ( x != 1 );
+    return ( x != 1 );
 }
 
 #ifdef WIN32
-int gettimeofday(struct timeval* p, void* tz) {
+int gettimeofday(struct timeval* p, void* tz)
+{
     ULARGE_INTEGER ul; // As specified on MSDN.
     FILETIME ft;
 
