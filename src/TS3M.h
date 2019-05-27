@@ -5,7 +5,7 @@
 /************* Hardware-related constants *************/
 
 #define TS3M_VENDOR_ID    0x0596
-#define TS3M_PRODUCT_ID	0x0502
+#define TS3M_PRODUCT_ID	0x05c6
 
 #define TS3M_X_RESOL 0x7FFF
 #define TS3M_Y_RESOL 0x7FFF
