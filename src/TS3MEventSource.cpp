@@ -7,7 +7,7 @@ TS3MEventSource::TS3MEventSource(struct hid_device_info* device,
                                  const string& name,
                                  bool verbose,
                                  unsigned width,
-                                 unsigned height) : _name(name), _tuioServer(NULL),
+                                 unsigned height) : _name(name), _tuioServer(NULL), _uinput(NULL),
     _device_width(width), _device_height(height),
     _is_running(false), _is_verbose(verbose),
     _handle(NULL), _is_big_endian(isBigEndian())
@@ -79,9 +79,10 @@ int TS3MEventSource::init(struct hid_device_info * device)
         cout << "3M Touch Screen found" << endl;
     }
 
+    _uinput = uinput_initialize();
 
     // Start TUIO server
-    _tuioServer = new TuioServer();
+    _tuioServer = new TuioServer("0.0.0.0", 4444);
     //_tuioServer->setSourceName(_name.c_str());
    // _tuioServer->enableCursorProfile(true);
     TuioTime::initSession();
@@ -210,6 +211,7 @@ void TS3MEventSource::_read_loop()
                         touchX = (double)xCoord / TS3M_X_RESOL;
                         touchY = (double)yCoord / TS3M_Y_RESOL;
 
+
                         if (_is_verbose)
                             cout << "#" << (int)currentTouch->touch_id << " "
                                  << (currentTouch->status != TS3M_NOT_TOUCHING? ((_touch_list[currentTouch->touch_id] != NULL)? "update" : "down"):"up")
@@ -217,11 +219,14 @@ void TS3MEventSource::_read_loop()
 
                         if (!_touch_list[currentTouch->touch_id]) { //new touch
                             _touch_list[currentTouch->touch_id] = _tuioServer->addTuioCursor(touchX, touchY);
+			    uinput_send_touch(_uinput, 0, currentTouch->touch_id, _touch_list[currentTouch->touch_id]->getCursorID(), xCoord, yCoord);
                         } else {
                             if (currentTouch->status == TS3M_NOT_TOUCHING) { //removed touch
+			        uinput_send_touch(_uinput, 2, currentTouch->touch_id, _touch_list[currentTouch->touch_id]->getCursorID(), xCoord, yCoord);
                                 _tuioServer->removeTuioCursor(_touch_list[currentTouch->touch_id]);
                                 _touch_list[currentTouch->touch_id] = NULL;
                             } else { //update position
+			        uinput_send_touch(_uinput, 1, currentTouch->touch_id, _touch_list[currentTouch->touch_id]->getCursorID(), xCoord, yCoord);
                                 _tuioServer->updateTuioCursor(_touch_list[currentTouch->touch_id], touchX, touchY);
                             }
                         }

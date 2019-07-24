@@ -7,6 +7,9 @@
 #include "hidapi/hidapi.h"
 
 #include "TUIO/TuioServer.h"
+extern "C" {
+#include "uinput.h"
+}
 
 #ifdef WIN32
 #include <windows.h>
@@ -20,6 +23,7 @@ class TS3MEventSource
 
     TuioServer          *_tuioServer;
     TuioCursor			*_touch_list[TOUCH_MAXID + 1];
+    struct libevdev_uinput *_uinput;
 
 public:
     TS3MEventSource(struct hid_device_info*	device, const string& name, bool verbose=false, unsigned width=TS3M_X_RESOL, unsigned height=TS3M_Y_RESOL);

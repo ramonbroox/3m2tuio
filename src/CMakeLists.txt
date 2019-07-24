@@ -1,11 +1,15 @@
 include_directories(${CMAKE_SOURCE_DIR}/libs/hidapi  ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/libs)
+include_directories(/usr/include/libevdev-1.0)
 
 set(TS3M2TUIO_SRCS
 	main.cpp
 	TS3MEventSource.cpp
 	Utilities.cpp
+	uinput.c
 )
+
+set(SYSLIBS ${SYSLIBS} evdev)
 
 if(WIN32)
 else(WIN32)
