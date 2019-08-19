@@ -215,7 +215,7 @@ void TS3MEventSource::_read_loop()
                         if (_is_verbose)
                             cout << "#" << (int)currentTouch->touch_id << " "
                                  << (currentTouch->status != TS3M_NOT_TOUCHING? ((_touch_list[currentTouch->touch_id] != NULL)? "update" : "down"):"up")
-                                 << " | X=" << touchX << " | Y=" << touchY << " | @" << date << endl;
+                                 << " | X=" << touchX << " | Y=" << touchY << " | @" << date << " | Rx=" << xCoord << "| Ry=" << yCoord << endl;
 
                         if (!_touch_list[currentTouch->touch_id]) { //new touch
                             _touch_list[currentTouch->touch_id] = _tuioServer->addTuioCursor(touchX, touchY);
