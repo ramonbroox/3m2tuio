@@ -1,6 +1,7 @@
-include_directories(${CMAKE_SOURCE_DIR}/libs/hidapi  ${CMAKE_CURRENT_SOURCE_DIR})
+#include_directories(${CMAKE_SOURCE_DIR}/libs/hidapi  ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/libs)
 include_directories(/usr/include/libevdev-1.0)
+include_directories(${HIDAPI_INCLUDE_DIRS})
 
 set(TS3M2TUIO_SRCS
 	main.cpp
@@ -16,5 +17,6 @@ else(WIN32)
 	set(SYSLIBS ${SYSLIBS} pthread)
 endif(WIN32)
 
+add_library(HIDAPI SHARED IMPORTED)
 add_executable(TS3M2TUIO ${SYS} ${TS3M2TUIO_SRCS})
-target_link_libraries(TS3M2TUIO HIDAPI TUIO ${SYSLIBS})
+target_link_libraries(TS3M2TUIO TUIO hidapi-hidraw ${SYSLIBS})

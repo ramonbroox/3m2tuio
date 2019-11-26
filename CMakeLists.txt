@@ -17,5 +17,5 @@ elseif(WIN32)
 endif(APPLE)
 
 add_subdirectory(src)
-add_subdirectory(libs/hidapi)
 add_subdirectory(libs/TUIO)
+find_package(HIDAPI)
