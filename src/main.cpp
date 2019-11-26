@@ -14,14 +14,14 @@ using namespace std;
 
 int main (int argc, char * const argv[])
 {
-    std::cout << "3M Touch Screen to TUIO server v0.1\n";
-    std::cout << "Type q to quit properly (for now...)" << endl;
+    std::cerr << "3M Touch Screen to TUIO server v0.1\n";
+    std::cerr << "Type q to quit properly (for now...)" << endl;
 
     if (argc > 1 && strcmp(argv[1],"--help")==0) {
         // print help and exit
-        cout << "usage : " << argv[0] << " [-v]" << endl;
-        cout << "\t-v : verbose mode" << endl;
-        cout << "\tNote: use with root privilege on Linux and admin privilege on MacOS X" << endl;
+        cerr << "usage : " << argv[0] << " [-v]" << endl;
+        cerr << "\t-v : verbose mode" << endl;
+        cerr << "\tNote: use with root privilege on Linux and admin privilege on MacOS X" << endl;
         exit(0);
     }
 
@@ -34,7 +34,7 @@ int main (int argc, char * const argv[])
     if (TS3MSourceCount > 0)
         while (getchar() != 'q');
     else {
-        cout << "No 3M device connected" << endl;
+        cerr << "No 3M device connected" << endl;
     }
 
 
@@ -58,12 +58,12 @@ unsigned int init_devs(bool verbose)
     devs = hid_enumerate(0x0, 0x0);
 
     if (!devs) {
-        cout << " Error : No HID device found" << endl;
+        cerr << " Error : No HID device found" << endl;
         hid_free_enumeration(devs);
         return 0;
     }
 
-    cout << "HID devices found : " << endl;
+    cerr << "HID devices found : " << endl;
     print_devs(devs);
 
     //launch supported devices
@@ -79,16 +79,16 @@ unsigned int init_devs(bool verbose)
 
                     ostringstream os;
                     os << "TS3M_" << ++TS3MSourceCount << endl;
-                    cout << "Opening " << os.str() << " ...";
+                    cerr << "Opening " << os.str() << " ...";
                     TS3MSource[TS3MSourceCount] = new TS3MEventSource(cur_dev, os.str(), verbose);
 
                     if (TS3MSource[TS3MSourceCount] != NULL && TS3MSource[TS3MSourceCount]->isOk()) {
-                        cout << "...succeeded" << endl;
+                        cerr << "...succeeded" << endl;
                         TS3MSource[TS3MSourceCount]->start(true); // run in background thread
-                        cout << "3M source " << TS3MSourceCount << " started " << endl;
+                        cerr << "3M source " << TS3MSourceCount << " started " << endl;
                     } else {
                         TS3MSourceCount--;
-                        cout << "...failed" << endl;
+                        cerr << "...failed" << endl;
                     }
 
                 }

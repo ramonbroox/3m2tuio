@@ -38,7 +38,7 @@ int TS3MEventSource::start(bool detach)
         return -1;
 
     _is_running = true;
-    cout << "about to create the thread, detach value is : " << detach << endl;
+    cerr << "about to create the thread, detach value is : " << detach << endl;
     if (detach) {
 #ifndef WIN32
         pthread_create(&_thread, NULL, TS3MEventSource::_read_thread, (void*)this);
@@ -71,15 +71,15 @@ int TS3MEventSource::init(struct hid_device_info * device)
 {
 
     if (!(_handle = hid_open_path(device->path))) {
-        cout << "Error opening 3M device" << endl;
+        cerr << "Error opening 3M device" << endl;
         exit(1);
     }
 
     if (_is_verbose) {
-        cout << "3M Touch Screen found" << endl;
+        cerr << "3M Touch Screen found" << endl;
     }
 
-    _uinput = uinput_initialize();
+    //_uinput = uinput_initialize();
 
     // Start TUIO server
     _tuioServer = new TuioServer("0.0.0.0", 4444);
@@ -114,7 +114,7 @@ DWORD WINAPI TS3MEventSource::_read_thread( LPVOID arg )
 //void *TS3MEventSource::_read_thread(void* arg) {
     TS3MEventSource	*source = (TS3MEventSource*)arg;
 
-    cout << "thread started" << endl;
+    cerr << "thread started" << endl;
 
     if (source != NULL)
         source->_read_loop();
@@ -133,16 +133,19 @@ void TS3MEventSource::_read_loop()
     int transferredTouch = 0;
 
     gettimeofday(&tv_init, NULL);
-    cout << "loop will begin is runnin value : " << _is_running << endl;
+    if (_is_verbose)
+	    cerr << "loop will begin is runnin value : " << _is_running << endl;
 
 
     while (_is_running) {
 
         memset(data, 0x00, length);
-        int dataTransfered = hid_read(_handle, data, length);
+	cout << "Reading..." << endl;
+        int dataTransfered = hid_read_timeout(_handle, data, length, 10);
+	cout << "Read " << dataTransfered << endl;
 
-        if (dataTransfered <= 0) {
-            cout << "error reading data : " << hid_error(_handle) << endl;
+        if (dataTransfered < 0) {
+            cerr << "error reading data : " << hid_error(_handle) << endl;
         }
 
         if (dataTransfered > 0) {
@@ -175,14 +178,15 @@ void TS3MEventSource::_read_loop()
 		    } else {
 		    	activeTouch = report17->actual_count;
 		    }
-		    cout << "Actual count: " << activeTouch << endl;
+                    if (_is_verbose)
+			    cerr << "Actual count: " << activeTouch << endl;
 		}
 
                 //check if we have a new frame
                 if (transferredTouch == 0) {
                     _tuioServer->initFrame(TuioTime::getSessionTime());
                     if (_is_verbose)
-                        cout << "frame pending..." << endl;
+                        cerr << "frame pending..." << endl;
                 }
 
                 for (int i = 0; i < maxtouches; i++) { //update for each touch tranfered infos
@@ -218,22 +222,32 @@ void TS3MEventSource::_read_loop()
                                  << " | X=" << touchX << " | Y=" << touchY << " | @" << date << " | Rx=" << xCoord << "| Ry=" << yCoord << endl;
 
                         if (!_touch_list[currentTouch->touch_id]) { //new touch
+			    cout << "NTS TUIO" << endl;
                             _touch_list[currentTouch->touch_id] = _tuioServer->addTuioCursor(touchX, touchY);
-			    uinput_send_touch(_uinput, 0, currentTouch->touch_id, _touch_list[currentTouch->touch_id]->getCursorID(), xCoord, yCoord);
+			    cout << "NTS UINPUT" << endl;
+			    //uinput_send_touch(_uinput, 0, currentTouch->touch_id, _touch_list[currentTouch->touch_id]->getCursorID(), xCoord, yCoord);
+			    cout << "NTS DONE" << endl;
                         } else {
                             if (currentTouch->status == TS3M_NOT_TOUCHING) { //removed touch
-			        uinput_send_touch(_uinput, 2, currentTouch->touch_id, _touch_list[currentTouch->touch_id]->getCursorID(), xCoord, yCoord);
+				cout << "REM TUIO" << endl;
                                 _tuioServer->removeTuioCursor(_touch_list[currentTouch->touch_id]);
+				cout << "REM UINPUT" << endl;
+			        //uinput_send_touch(_uinput, 2, currentTouch->touch_id, _touch_list[currentTouch->touch_id]->getCursorID(), xCoord, yCoord);
+				cout << "REM DONE" << endl;
                                 _touch_list[currentTouch->touch_id] = NULL;
                             } else { //update position
-			        uinput_send_touch(_uinput, 1, currentTouch->touch_id, _touch_list[currentTouch->touch_id]->getCursorID(), xCoord, yCoord);
+				cout << "UPD TUIO" << endl;
                                 _tuioServer->updateTuioCursor(_touch_list[currentTouch->touch_id], touchX, touchY);
+				cout << "UPD UINPUT" << endl;
+			        //uinput_send_touch(_uinput, 1, currentTouch->touch_id, _touch_list[currentTouch->touch_id]->getCursorID(), xCoord, yCoord);
+				cout << "UPD DONE" << endl;
                             }
                         }
                     }
                 }
 
-                cout << "active touch" << activeTouch << "     transferred touch " << transferredTouch << endl;
+		if (_is_verbose) 
+			cerr << "active touch" << activeTouch << "     transferred touch " << transferredTouch << endl;
 
                 //check if we received all touch, if yes send the frame
                 if(activeTouch == transferredTouch) {
@@ -241,11 +255,19 @@ void TS3MEventSource::_read_loop()
                     activeTouch = 0;
 
                     if (_is_verbose)
-                        cout << "commit frame" << endl;
+                        cerr << "commit frame" << endl;
                     _tuioServer->commitFrame();
                 }
-            }
-        }
+            } else {
+		    if (_is_verbose)
+			    cerr << "Received unhandled report " << report_type << endl;;
+	    }
+        } else {
+		static timespec req;
+		req.tv_sec = 0;
+		req.tv_nsec = 16*1000000; // 16ms
+		nanosleep(&req, NULL);
+	}
     }
 }
 
